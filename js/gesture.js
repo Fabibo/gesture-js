@@ -25,13 +25,19 @@ function init() {
 function doTouchStart(event) {
     event.preventDefault();
 
-    var canvas_x, canvas_y;
+    var canvas_x1, canvas_y1, canvas_x2, canvas_y2;
     if (event.targetTouches === undefined) {
-        canvas_x = event.screenX;
-        canvas_y = event.screenY;
-    } else {
-        canvas_x = event.targetTouches[0].pageX;
-        canvas_y = event.targetTouches[0].pageY;
+        canvas_x1 = event.screenX;
+        canvas_y1 = event.screenY;
+    } else if (event.targetTouches.length == 1) {
+        canvas_x1 = event.targetTouches[0].pageX;
+        canvas_y1 = event.targetTouches[0].pageY;
+    } else if (event.targetTouches.length == 2) {
+        canvas_x1 = event.targetTouches[0].pageX;
+        canvas_y1 = event.targetTouches[0].pageY;
+
+        canvas_x2 = event.targetTouches[1].pageX;
+        canvas_y2 = event.targetTouches[1].pageY;
     }
 
     var canvas = document.getElementById("canvas_1");
@@ -44,8 +50,10 @@ function doTouchStart(event) {
             ctx.strokeRect(0,0,canvas.width, canvas.height);
             ctx.font="30px Verdana";
             ctx.fillStyle = "#000000";
-            ctx.fillText("X= " + canvas_x,10,50);
-            ctx.fillText("Y= " + canvas_y,10,90);
+            ctx.fillText("X= " + canvas_x1,10,50);
+            ctx.fillText("Y= " + canvas_y1,10,90);
+            ctx.fillText("X= " + canvas_x2,20,200);
+            ctx.fillText("Y= " + canvas_y2,20,240);
         }
     }
 }
