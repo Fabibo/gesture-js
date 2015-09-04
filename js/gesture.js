@@ -114,6 +114,8 @@ function handleMove(evt) {
             }
         }
     }
+    
+    simplifyExpression();
 }
 
 function handleEnd(evt) {
@@ -168,4 +170,28 @@ function ongoingTouchIndexById(idToFind) {
 
 function printStringToOutputDiv(string) {
 	outputDiv.innerHTML = string;
+}
+
+function simplifyExpression() {
+	var regex = /((M<sub>([0-9])<\/sub>\sM<sub>([0-9])<\/sub>\s)|(\(.*\)\*)){1,}/g, result, indices = [];
+	while ((result = regex.exec(resultProtonString))) {
+	    indices.push([result.index,result[0].length]);
+	}
+	
+	for (c = 0; c < indices.length; c++) {
+		var newString = "(";
+		for (var i = 0; i < 10; i++) {
+			var substring = resultProtonString.substring(indices[c][0], indices[c][1]);
+			var count = (substring.match(new RegExp(i, 'g')) || []).length;
+			if (count > 0) newString = newString + "M<sub>" + i + "</sub> | ";
+		}
+		newString = newString.substring(0, newString.length-3) + ")* ";
+		
+		var prev = (c == 0) ? 0 : (c-1);
+		var next = (c == indices.length-1) ? (resultProtonString.length+1) : (c+1);
+
+		if (newString.length > 3) resultProtonString = resultProtonString.substring(prev, indices[c][0]) + newString + resultProtonString.substring(indices[c][0] + indices[c][1], next);
+	}
+	
+	printStringToOutputDiv(resultProtonString);
 }
