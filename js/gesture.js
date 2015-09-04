@@ -49,6 +49,7 @@ function handleStart(evt) {
         ongoingTouches = new Array();
         resultProtonString = "";
         lastItem = "";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         printStringToOutputDiv(resultProtonString);
     }
 
@@ -56,7 +57,7 @@ function handleStart(evt) {
     var touches = evt.changedTouches;
 	// Loop over all touch points (= fingers involved into this event)
     for (var i = 0; i < touches.length; i++) {
-        ongoingTouches.push(copyTouch(touches[i]));
+        var idx = ongoingTouches.push(copyTouch(touches[i]));
 		// Prepare expression-encoded output of recognized touch down event
         var downToAdd = " D<sub>"+ (ongoingTouches.length-1) + "</sub>";
         lastItem = downToAdd;
@@ -64,7 +65,7 @@ function handleStart(evt) {
         printStringToOutputDiv(resultProtonString);
 		// Draw a circle at the starting point (touch down point)
         ctx.beginPath();
-        ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);
+        ctx.arc(touches[i].pageX, touches[i].pageY, 8, 0, 2 * Math.PI, false);
         ctx.fill();
     }
 }
@@ -128,11 +129,12 @@ function handleEnd(evt) {
             lastItem = " U<sub>" + idx + "</sub>";
             printStringToOutputDiv(resultProtonString);
 			// Draw a square at the ending point (touch up point)
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
             ctx.lineTo(touches[i].pageX, touches[i].pageY);
-            ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);
+            ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 15, 15);
+            ctx.stroke();
 			// Mark touch element as invalid to allow handleStart function to clear up the output
             ongoingTouches[idx].identifier = -1;
         }
@@ -166,11 +168,4 @@ function ongoingTouchIndexById(idToFind) {
 
 function printStringToOutputDiv(string) {
 	outputDiv.innerHTML = string;
-	
-	if (canvas && canvas.getContext) {
-        var ctx = canvas.getContext("2d");
-        if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-    }
 }
