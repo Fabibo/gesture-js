@@ -1,7 +1,7 @@
 /**
  * Created by Fabian on 29.06.2015.
  *
- * Angelehnt an Beispiel von: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
+ * Canvas drawing code based on: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
  */
 
 var ongoingTouches = new Array();
@@ -9,19 +9,23 @@ var resultProtonString = "";
 var lastItem = "";
 
 var MOVE_DIFFERENCE = 40;
+var canvas;
+var outputDiv;
 
 /**
  * Set Size of Canvas.
  * Init the Listeners on the Canvas.
  */
 function startup() {
-    var canvas = document.getElementsByTagName("canvas")[0];
+	// Adjust canvas size to match window size
+	canvas = document.getElementsByTagName("canvas")[0];
+	outputDiv = document.getElementById("output");
     var width = window.innerWidth;
     var height = window.innerHeight;
-
     canvas.width = width;
     canvas.height = height;
-
+    
+	// Register canvas for event listeners enable the canvas to react to finger touches and movements
     canvas.addEventListener("touchstart", handleStart, false);
     canvas.addEventListener("touchend", handleEnd, false);
     canvas.addEventListener("touchcancel", handleCancel, false);
@@ -31,10 +35,10 @@ function startup() {
 
 function handleStart(evt) {
     evt.preventDefault();
+    var ctx = canvas.getContext("2d");
 
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
-
+	// Elements in the ongoingTouches array will become invalid, once the according finger has been lifted from the surface (see below)
+	// Use this knowledge to clear the output div once a "new session" (= finger(s) begin touch down again) has been started
     var onlyNull = true;
     for (var i = 0; i < ongoingTouches.length; i++) {
         if (ongoingTouches[i].identifier != -1) {
@@ -45,31 +49,31 @@ function handleStart(evt) {
         ongoingTouches = new Array();
         resultProtonString = "";
         lastItem = "";
-        printStringOnCanvas(resultProtonString);
+        printStringToOutputDiv(resultProtonString);
     }
 
+	// Determine which touch points had contributed to this touch down event
     var touches = evt.changedTouches;
-
+	// Loop over all touch points (= fingers involved into this event)
     for (var i = 0; i < touches.length; i++) {
         ongoingTouches.push(copyTouch(touches[i]));
-
-        var downToAdd = " D"+ (ongoingTouches.length-1);
+		// Prepare expression-encoded output of recognized touch down event
+        var downToAdd = " D<sub>"+ (ongoingTouches.length-1) + "</sub>";
         lastItem = downToAdd;
-        resultProtonString = resultProtonString + " D"+ (ongoingTouches.length-1);
-        printStringOnCanvas(resultProtonString);
-
+        resultProtonString = resultProtonString + " D<sub>"+ (ongoingTouches.length-1) + "</sub>";
+        printStringToOutputDiv(resultProtonString);
+		// Draw a circle at the starting point (touch down point)
         ctx.beginPath();
-        ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);  // a circle at the start
+        ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);
         ctx.fill();
     }
 }
 
 function handleMove(evt) {
     evt.preventDefault();
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
+    var ctx = canvas.getContext("2d");
+    
     var touches = evt.changedTouches;
-
     for (var i = 0; i < touches.length; i++) {
         var idx = ongoingTouchIndexById(touches[i].identifier);
         if (idx >= 0) {
@@ -79,20 +83,24 @@ function handleMove(evt) {
                  touches[i].pageY > ongoingTouches[idx].pageY + MOVE_DIFFERENCE ||
                  touches[i].pageY < ongoingTouches[idx].pageY - MOVE_DIFFERENCE) {
 
-                var stringToAdd = " M" + idx;
+				// Prepare expression-encoded output of recognized movement event
+                var stringToAdd = " M<sub>" + idx + "</sub>";
 
+				// Check and register ongoing movements
                 if (lastItem == stringToAdd) {
                     resultProtonString = resultProtonString + "*";
                     lastItem = stringToAdd + "*";
                 }
                 else if (lastItem == (stringToAdd + "*")) {
+	                // Nothing to do
                 }
                 else {
-                    resultProtonString = resultProtonString + " M" + idx;
+                    resultProtonString = resultProtonString + " M<sub>" + idx + "</sub>";
                     lastItem = stringToAdd;
                 }
-                printStringOnCanvas(resultProtonString);
+                printStringToOutputDiv(resultProtonString);
 
+				// Draw visualization of this movement event
                 ctx.beginPath();
                 ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
                 ctx.lineTo(touches[i].pageX, touches[i].pageY);
@@ -109,24 +117,23 @@ function handleMove(evt) {
 
 function handleEnd(evt) {
     evt.preventDefault();
-    var el = document.getElementsByTagName("canvas")[0];
-    var ctx = el.getContext("2d");
+    var ctx = canvas.getContext("2d");
+    
     var touches = evt.changedTouches;
-
     for (var i = 0; i < touches.length; i++) {
         var idx = ongoingTouchIndexById(touches[i].identifier);
 
         if (idx >= 0) {
-            resultProtonString = resultProtonString + " U" + idx;
-            lastItem = " U" + idx;
-            printStringOnCanvas(resultProtonString);
-
+            resultProtonString = resultProtonString + " U<sub>" + idx + "</sub>";
+            lastItem = " U<sub>" + idx + "</sub>";
+            printStringToOutputDiv(resultProtonString);
+			// Draw a square at the ending point (touch up point)
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
             ctx.lineTo(touches[i].pageX, touches[i].pageY);
-            ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);  // and a square at the end
-
+            ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);
+			// Mark touch element as invalid to allow handleStart function to clear up the output
             ongoingTouches[idx].identifier = -1;
         }
     }
@@ -134,8 +141,8 @@ function handleEnd(evt) {
 
 function handleCancel(evt) {
     evt.preventDefault();
+    
     var touches = evt.changedTouches;
-
     for (var i = 0; i < touches.length; i++) {
         var idx = ongoingTouchIndexById(touches[i].identifier);
         ongoingTouches[idx] = -1;
@@ -145,7 +152,6 @@ function handleCancel(evt) {
 function copyTouch(touch) {
     return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
 }
-
 
 function ongoingTouchIndexById(idToFind) {
     for (var i = 0; i < ongoingTouches.length; i++) {
@@ -158,15 +164,13 @@ function ongoingTouchIndexById(idToFind) {
     return -1;    // not found
 }
 
-function printStringOnCanvas(string) {
-    var canvas = document.getElementsByTagName("canvas")[0];
-    if (canvas && canvas.getContext) {
+function printStringToOutputDiv(string) {
+	outputDiv.innerHTML = string;
+	
+	if (canvas && canvas.getContext) {
         var ctx = canvas.getContext("2d");
         if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font="30px Verdana";
-            ctx.fillStyle = "#000000";
-            ctx.fillText(string ,10,50);
         }
     }
 }
