@@ -4,11 +4,21 @@
  * Canvas drawing code based on: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
  */
 
+/*
+ * Settings:
+ */
+var MOVE_DIFFERENCE = 40; // in px, minimum Way needed to move to recognice the Movement.
+var USE_MOVE_SIMPLIFY = false; // boolean, turn on function which simplifies the Movement Output.
+
+/*
+ *  Internal used variables.
+ *
+ *  DO NOT CHANGE!
+ */
 var ongoingTouches = new Array();
 var resultProtonString = "";
 var lastItem = "";
 
-var MOVE_DIFFERENCE = 40;
 var canvas;
 var outputDiv;
 
@@ -173,25 +183,27 @@ function printStringToOutputDiv(string) {
 }
 
 function simplifyExpression() {
-	var regex = /((M<sub>([0-9])<\/sub>\sM<sub>([0-9])<\/sub>\s)|(\(.*\)\*)){1,}/g, result, indices = [];
-	while ((result = regex.exec(resultProtonString))) {
-	    indices.push([result.index,result[0].length]);
-	}
-	
-	for (c = 0; c < indices.length; c++) {
-		var newString = "(";
-		for (var i = 0; i < 10; i++) {
-			var substring = resultProtonString.substring(indices[c][0], indices[c][1]);
-			var count = (substring.match(new RegExp(i, 'g')) || []).length;
-			if (count > 0) newString = newString + "M<sub>" + i + "</sub> | ";
-		}
-		newString = newString.substring(0, newString.length-3) + ")* ";
-		
-		var prev = (c == 0) ? 0 : (c-1);
-		var next = (c == indices.length-1) ? (resultProtonString.length+1) : (c+1);
+    if (USE_MOVE_SIMPLIFY) {
+        var regex = /((M<sub>([0-9])<\/sub>\sM<sub>([0-9])<\/sub>\s)|(\(.*\)\*)){1,}/g, result, indices = [];
+        while ((result = regex.exec(resultProtonString))) {
+            indices.push([result.index, result[0].length]);
+        }
 
-		if (newString.length > 3) resultProtonString = resultProtonString.substring(prev, indices[c][0]) + newString + resultProtonString.substring(indices[c][0] + indices[c][1], next);
-	}
-	
-	printStringToOutputDiv(resultProtonString);
+        for (c = 0; c < indices.length; c++) {
+            var newString = "(";
+            for (var i = 0; i < 10; i++) {
+                var substring = resultProtonString.substring(indices[c][0], indices[c][1]);
+                var count = (substring.match(new RegExp(i, 'g')) || []).length;
+                if (count > 0) newString = newString + "M<sub>" + i + "</sub> | ";
+            }
+            newString = newString.substring(0, newString.length - 3) + ")* ";
+
+            var prev = (c == 0) ? 0 : (c - 1);
+            var next = (c == indices.length - 1) ? (resultProtonString.length + 1) : (c + 1);
+
+            if (newString.length > 3) resultProtonString = resultProtonString.substring(prev, indices[c][0]) + newString + resultProtonString.substring(indices[c][0] + indices[c][1], next);
+        }
+
+        printStringToOutputDiv(resultProtonString);
+    }
 }
