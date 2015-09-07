@@ -19,6 +19,10 @@ var ongoingTouches = new Array();
 var resultProtonString = "";
 var lastItem = "";
 
+// Set this to true in order to simplify the resultProtonString by merging sequential M expressions (pattern generation), see below
+var simplifyProtonString = false;
+
+var MOVE_DIFFERENCE = 40;
 var canvas;
 var outputDiv;
 
@@ -125,7 +129,7 @@ function handleMove(evt) {
         }
     }
     
-    simplifyExpression();
+    if (simplifyProtonString) simplifyExpression();
 }
 
 function handleEnd(evt) {
