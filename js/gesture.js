@@ -7,8 +7,10 @@
 /*
  * Settings:
  */
-var MOVE_DIFFERENCE = 40; // in px, minimum Way needed to move to recognice the Movement.
-var USE_MOVE_SIMPLIFY = false; // boolean, turn on function which simplifies the Movement Output.
+// Set this to the amount of px in order to choose the length that need to be moved to detect the Movement.
+var MOVE_DIFFERENCE = 40;
+// Set this to true in order to simplify the resultProtonString by merging sequential M expressions (pattern generation), see below
+var simplifyProtonString = false;
 
 /*
  *  Internal used variables.
@@ -19,8 +21,7 @@ var ongoingTouches = new Array();
 var resultProtonString = "";
 var lastItem = "";
 
-// Set this to true in order to simplify the resultProtonString by merging sequential M expressions (pattern generation), see below
-var simplifyProtonString = false;
+
 
 var MOVE_DIFFERENCE = 40;
 var canvas;
@@ -129,7 +130,7 @@ function handleMove(evt) {
         }
     }
     
-    if (simplifyProtonString) simplifyExpression();
+    simplifyExpression();
 }
 
 function handleEnd(evt) {
@@ -187,7 +188,7 @@ function printStringToOutputDiv(string) {
 }
 
 function simplifyExpression() {
-    if (USE_MOVE_SIMPLIFY) {
+    if (simplifyProtonString) {
         var regex = /((M<sub>([0-9])<\/sub>\sM<sub>([0-9])<\/sub>\s)|(\(.*\)\*)){1,}/g, result, indices = [];
         while ((result = regex.exec(resultProtonString))) {
             indices.push([result.index, result[0].length]);
