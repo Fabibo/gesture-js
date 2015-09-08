@@ -8,7 +8,7 @@
  * Settings:
  */
 // Set this to the amount of px in order to choose the length that need to be moved to detect the Movement.
-var MOVE_DIFFERENCE = 40;
+var MOVE_DIFFERENCE = 100;
 // Set this to true in order to simplify the resultProtonString by merging sequential M expressions (pattern generation), see below
 var simplifyProtonString = false;
 
@@ -21,9 +21,6 @@ var ongoingTouches = new Array();
 var resultProtonString = "";
 var lastItem = "";
 
-
-
-var MOVE_DIFFERENCE = 40;
 var canvas;
 var outputDiv;
 
